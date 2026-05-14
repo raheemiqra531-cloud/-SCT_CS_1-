@@ -1,1 +1,187 @@
+# ============================================================
+#  SCT_CS_1 — Caesar Cipher | GUI Version
+#  SkillCraft Technology | Cyber Security Internship
+#  Author : Iqra Raheem
+# ============================================================
 
+import tkinter as tk
+from tkinter import ttk, messagebox, scrolledtext
+
+
+# ── Core cipher logic ────────────────────────────────────────
+def caesar_cipher(text, shift, mode='encrypt'):
+    result = []
+    if mode == 'decrypt':
+        shift = -shift
+    for char in text:
+        if char.isalpha():
+            base = ord('A') if char.isupper() else ord('a')
+            result.append(chr((ord(char) - base + shift) % 26 + base))
+        else:
+            result.append(char)
+    return ''.join(result)
+
+
+# ── App class ─────────────────────────────────────────────────
+class CaesarCipherApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Caesar Cipher — SkillCraft Technology")
+        self.root.geometry("640x560")
+        self.root.resizable(False, False)
+        self.root.configure(bg="#1e1e2e")
+
+        # Colours
+        BG       = "#1e1e2e"
+        CARD     = "#2a2a3e"
+        ACCENT   = "#7c3aed"
+        ACCENT2  = "#06b6d4"
+        FG       = "#f1f5f9"
+        ENTRY_BG = "#12121f"
+        BTN_FG   = "#ffffff"
+
+        # ── Title bar ────────────────────────────────────────
+        title_frame = tk.Frame(root, bg=ACCENT, pady=10)
+        title_frame.pack(fill="x")
+        tk.Label(title_frame, text="🔐  CAESAR CIPHER",
+                 font=("Consolas", 18, "bold"),
+                 bg=ACCENT, fg=BTN_FG).pack()
+        tk.Label(title_frame, text="SkillCraft Technology | Cyber Security Internship — Task 01",
+                 font=("Consolas", 9), bg=ACCENT, fg="#e2d9f3").pack()
+
+        # ── Input card ───────────────────────────────────────
+        card = tk.Frame(root, bg=CARD, padx=20, pady=15)
+        card.pack(fill="x", padx=20, pady=(15, 5))
+
+        tk.Label(card, text="Message", font=("Consolas", 10, "bold"),
+                 bg=CARD, fg=ACCENT2).grid(row=0, column=0, sticky="w")
+        self.msg_entry = scrolledtext.ScrolledText(
+            card, height=4, width=58, font=("Consolas", 11),
+            bg=ENTRY_BG, fg=FG, insertbackground=FG,
+            relief="flat", wrap="word")
+        self.msg_entry.grid(row=1, column=0, columnspan=3, pady=(4, 12))
+
+        tk.Label(card, text="Shift Value (1–25)", font=("Consolas", 10, "bold"),
+                 bg=CARD, fg=ACCENT2).grid(row=2, column=0, sticky="w")
+        self.shift_var = tk.IntVar(value=3)
+        shift_spin = tk.Spinbox(card, from_=1, to=25,
+                                textvariable=self.shift_var,
+                                font=("Consolas", 12), width=6,
+                                bg=ENTRY_BG, fg=FG, buttonbackground=ACCENT,
+                                relief="flat")
+        shift_spin.grid(row=2, column=1, sticky="w", padx=10)
+
+        self.shift_label = tk.Label(card, text="shift = 3",
+                                    font=("Consolas", 10),
+                                    bg=CARD, fg="#94a3b8")
+        self.shift_label.grid(row=2, column=2, sticky="w")
+        self.shift_var.trace_add("write",
+            lambda *_: self.shift_label.config(
+                text=f"shift = {self.shift_var.get()}"))
+
+        # ── Buttons ──────────────────────────────────────────
+        btn_frame = tk.Frame(root, bg=BG)
+        btn_frame.pack(pady=8)
+
+        btn_cfg = dict(font=("Consolas", 11, "bold"), width=14,
+                       relief="flat", cursor="hand2", pady=7)
+
+        tk.Button(btn_frame, text="🔒  Encrypt",
+                  bg=ACCENT, fg=BTN_FG,
+                  command=self.encrypt, **btn_cfg).grid(
+                  row=0, column=0, padx=8)
+
+        tk.Button(btn_frame, text="🔓  Decrypt",
+                  bg="#059669", fg=BTN_FG,
+                  command=self.decrypt, **btn_cfg).grid(
+                  row=0, column=1, padx=8)
+
+        tk.Button(btn_frame, text="🔎  Brute Force",
+                  bg="#b45309", fg=BTN_FG,
+                  command=self.brute_force, **btn_cfg).grid(
+                  row=0, column=2, padx=8)
+
+        tk.Button(btn_frame, text="🗑  Clear",
+                  bg="#475569", fg=BTN_FG,
+                  command=self.clear, **btn_cfg).grid(
+                  row=0, column=3, padx=8)
+
+        # ── Output card ──────────────────────────────────────
+        out_card = tk.Frame(root, bg=CARD, padx=20, pady=15)
+        out_card.pack(fill="both", expand=True, padx=20, pady=(5, 15))
+
+        out_header = tk.Frame(out_card, bg=CARD)
+        out_header.pack(fill="x")
+        tk.Label(out_header, text="Output", font=("Consolas", 10, "bold"),
+                 bg=CARD, fg=ACCENT2).pack(side="left")
+        tk.Button(out_header, text="Copy", font=("Consolas", 9),
+                  bg=ACCENT, fg=BTN_FG, relief="flat",
+                  cursor="hand2", padx=8,
+                  command=self.copy_output).pack(side="right")
+
+        self.output = scrolledtext.ScrolledText(
+            out_card, height=8, font=("Consolas", 11),
+            bg=ENTRY_BG, fg="#a3e635",
+            insertbackground=FG, relief="flat",
+            state="disabled", wrap="word")
+        self.output.pack(fill="both", expand=True, pady=(6, 0))
+
+    # ── Helpers ──────────────────────────────────────────────
+    def _get_inputs(self):
+        text  = self.msg_entry.get("1.0", "end-1c").strip()
+        try:
+            shift = int(self.shift_var.get())
+            if not 1 <= shift <= 25:
+                raise ValueError
+        except (ValueError, tk.TclError):
+            messagebox.showerror("Invalid Shift",
+                                 "Shift must be an integer between 1 and 25.")
+            return None, None
+        if not text:
+            messagebox.showwarning("Empty Message", "Please enter a message.")
+            return None, None
+        return text, shift
+
+    def _show(self, content):
+        self.output.config(state="normal")
+        self.output.delete("1.0", "end")
+        self.output.insert("end", content)
+        self.output.config(state="disabled")
+
+    def encrypt(self):
+        text, shift = self._get_inputs()
+        if text is None: return
+        enc = caesar_cipher(text, shift, 'encrypt')
+        self._show(f"Original  : {text}\nShift     : {shift}\nEncrypted : {enc}")
+
+    def decrypt(self):
+        text, shift = self._get_inputs()
+        if text is None: return
+        dec = caesar_cipher(text, shift, 'decrypt')
+        self._show(f"Encrypted : {text}\nShift     : {shift}\nDecrypted : {dec}")
+
+    def brute_force(self):
+        text, _ = self._get_inputs()
+        if text is None: return
+        lines = ["--- Brute-Force All 25 Shifts ---\n"]
+        for s in range(1, 26):
+            lines.append(f"Shift {s:>2} : {caesar_cipher(text, s, 'decrypt')}")
+        self._show('\n'.join(lines))
+
+    def copy_output(self):
+        content = self.output.get("1.0", "end-1c")
+        if content:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(content)
+            messagebox.showinfo("Copied", "Output copied to clipboard!")
+
+    def clear(self):
+        self.msg_entry.delete("1.0", "end")
+        self._show("")
+
+
+# ── Entry point ──────────────────────────────────────────────
+if __name__ == "__main__":
+    root = tk.Tk()
+    app  = CaesarCipherApp(root)
+    root.mainloop()
