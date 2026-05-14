@@ -116,6 +116,12 @@ def caesar_cipher(text, shift, mode='encrypt'):
 
 ---
 
+#screen shot of output
+
+<img width="795" height="718" alt="Screenshot 2026-05-14 120635" src="https://github.com/user-attachments/assets/674ba9f9-bbfb-4023-bdc5-b48f970a4402" />
+
+---
+
 ## 👩‍💻 Author
 
 **Iqra Raheem**
